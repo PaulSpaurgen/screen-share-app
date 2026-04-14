@@ -4,7 +4,7 @@ import {
   setActiveTool,
   setStrokeColor,
   setStrokeWidth,
-} from "../store/slices/annotationSlice";
+} from "../annotations/annotationSlice";
 import { DrawingTool } from "../store/types";
 
 interface ToolbarProps {

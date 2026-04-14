@@ -1,24 +1,25 @@
-import { useRef, useState, useCallback, useLayoutEffect } from "react";
-import { useAppDispatch, useAppSelector } from "./store/hooks";
-import { setStatus, setError, reset } from "./store/slices/screenShareSlice";
-import { resetAnnotation } from "./store/slices/annotationSlice";
+import { lazy, Suspense, useRef, useState, useCallback, useLayoutEffect } from "react";
+import { Provider } from "react-redux";
+import { store } from "./store";
+import { useAppSelector } from "./store/hooks";
+import { useScreenCapture } from "./screen-share/hooks/useScreenCapture";
 import Toolbar from "./components/Toolbar";
-import CanvasOverlay from "./CanvasOverlay";
 
-export default function ScreenShare() {
-  const dispatch = useAppDispatch();
-  const { status, error } = useAppSelector((s) => s.screenShare);
-  const { isEnabled } = useAppSelector((s) => s.annotation);
+const CanvasOverlay = lazy(
+  () => import("./annotations/components/CanvasOverlay")
+);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const liveVideoRef = useRef<HTMLVideoElement | null>(null);
+function ScreenShareInner() {
+  const status = useAppSelector((s) => s.screenShare.status);
+  const error = useAppSelector((s) => s.screenShare.error);
+  const isEnabled = useAppSelector((s) => s.annotation.isEnabled);
+
+  const { liveVideoRef, startCapture, stopCapture } = useScreenCapture();
+
   const videoWrapperRef = useRef<HTMLDivElement>(null);
   const videoAspectRef = useRef<number | null>(null);
   const [renderedSize, setRenderedSize] = useState<{ width: number; height: number } | null>(null);
 
-  // Recompute the exact pixel area the video content occupies (objectFit: contain logic).
   const updateRenderedSize = useCallback(() => {
     const wrapper = videoWrapperRef.current;
     const aspect = videoAspectRef.current;
@@ -29,11 +30,9 @@ export default function ScreenShare() {
 
     let w: number, h: number;
     if (availW / availH > aspect) {
-      // Wrapper is wider than video → constrained by height
       h = availH;
       w = availH * aspect;
     } else {
-      // Wrapper is taller than video → constrained by width
       w = availW;
       h = availW / aspect;
     }
@@ -41,7 +40,6 @@ export default function ScreenShare() {
     setRenderedSize({ width: Math.round(w), height: Math.round(h) });
   }, []);
 
-  // Watch the wrapper for any size change and recompute.
   useLayoutEffect(() => {
     const wrapper = videoWrapperRef.current;
     if (!wrapper) return;
@@ -51,59 +49,6 @@ export default function ScreenShare() {
   }, [updateRenderedSize]);
 
   const isActive = status === "active";
-
-  const streamToVideoTag = (stream: MediaStream | null) => {
-    const video = liveVideoRef.current;
-    if (!video) return;
-    video.srcObject = stream;
-    if (stream) void video.play().catch(() => {});
-  };
-
-  const stopCapture = () => {
-    mediaRecorderRef.current?.stop();
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-    mediaRecorderRef.current = null;
-    streamToVideoTag(null);
-    dispatch(reset());
-    dispatch(resetAnnotation());
-  };
-
-  const handleStartSharing = async () => {
-    if (!navigator.mediaDevices?.getDisplayMedia) {
-      dispatch(setError("Screen sharing is not supported in this browser."));
-      return;
-    }
-    dispatch(setStatus("requesting"));
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: true,
-      });
-
-      chunksRef.current = [];
-      streamRef.current = stream;
-      streamToVideoTag(stream);
-
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
-      mediaRecorderRef.current = mediaRecorder;
-
-      mediaRecorder.ondataavailable = (event: BlobEvent) => {
-        if (event.data.size > 0) chunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        dispatch(reset());
-      };
-
-      stream.getVideoTracks()[0]?.addEventListener("ended", () => stopCapture());
-
-      mediaRecorder.start();
-      dispatch(setStatus("active"));
-    } catch {
-      dispatch(setError("Screen sharing was cancelled or failed."));
-    }
-  };
 
   const statusMessage: Record<string, string> = {
     idle: "Ready to share your screen.",
@@ -115,12 +60,10 @@ export default function ScreenShare() {
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", background: "#111827", overflow: "hidden" }}>
 
-      {/* Outer wrapper — takes all remaining space and centres the video box */}
       <div
         ref={videoWrapperRef}
         style={{ flex: 1, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "#111827" }}
       >
-        {/* Inner box — sized exactly to the rendered video content, no letterbox gaps */}
         <div
           id="video-container"
           style={{
@@ -148,11 +91,23 @@ export default function ScreenShare() {
             </div>
           )}
 
-          {isEnabled && isActive && <CanvasOverlay />}
+          {isEnabled && isActive && (
+            <Suspense fallback={null}>
+              <CanvasOverlay />
+            </Suspense>
+          )}
         </div>
       </div>
 
-      <Toolbar onStartSharing={handleStartSharing} onStopCapture={stopCapture} />
+      <Toolbar onStartSharing={startCapture} onStopCapture={stopCapture} />
     </div>
+  );
+}
+
+export default function ScreenSharePage() {
+  return (
+    <Provider store={store}>
+      <ScreenShareInner />
+    </Provider>
   );
 }

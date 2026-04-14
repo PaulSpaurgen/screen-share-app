@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AnnotationState, DrawingTool } from '../types';
+import { AnnotationState, DrawingTool } from '../store/types';
 
 const initialState: AnnotationState = {
   isEnabled: false,

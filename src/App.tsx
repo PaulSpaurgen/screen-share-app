@@ -1,5 +1,5 @@
-import ScreenShare from "./Pages/ScreenShare";
+import ScreenSharePage from "./Pages/ScreenShare";
 
 export default function App() {
-  return <ScreenShare />;
+  return <ScreenSharePage />;
 }

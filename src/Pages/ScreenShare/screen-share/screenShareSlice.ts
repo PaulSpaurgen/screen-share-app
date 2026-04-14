@@ -1,5 +1,9 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ScreenShareState, ShareStatus } from '../types';
+import { createAction, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { ScreenShareState, ShareStatus } from '../store/types';
+
+// Saga trigger actions — these carry no reducer logic; sagas watch for them.
+export const startCaptureRequest = createAction('screenShare/startCaptureRequest');
+export const stopCaptureRequest = createAction('screenShare/stopCaptureRequest');
 
 const initialState: ScreenShareState = {
   status: 'idle',
