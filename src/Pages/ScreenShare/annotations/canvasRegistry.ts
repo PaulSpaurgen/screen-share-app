@@ -15,3 +15,15 @@ export const canvasRegistry = {
   canvas: null as fabric.Canvas | null,
   isRestoring: false,
 };
+
+/**
+ * After `fc.dispose()`, Fabric nullifies its internal `lowerCanvasEl`.
+ * Any subsequent call to `setWidth` / `setHeight` / `renderAll` will throw.
+ * Use this guard before any imperative canvas operation that might race
+ * against the saga's teardown (e.g. ResizeObserver callbacks).
+ */
+export function isCanvasAlive(fc: fabric.Canvas | null): fc is fabric.Canvas {
+  if (!fc) return false;
+  // Fabric 5.x sets lowerCanvasEl to undefined/null after dispose.
+  return (fc as unknown as Record<string, unknown>).lowerCanvasEl != null;
+}
