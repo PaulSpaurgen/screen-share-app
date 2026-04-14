@@ -4,6 +4,7 @@ import {
   strokeCommitted,
   undoRequested,
   redoRequested,
+  clearCanvasRequested,
   setCanUndo,
   setCanRedo,
   resetAnnotation,
@@ -16,6 +17,14 @@ import {
 function captureSnapshot(): string | null {
   const { canvas } = canvasRegistry;
   return canvas ? JSON.stringify(canvas.toJSON()) : null;
+}
+
+function clearCanvas(): void {
+  const { canvas } = canvasRegistry;
+  if (!canvas) return;
+  canvas.clear();
+  canvas.backgroundColor = 'transparent';
+  canvas.renderAll();
 }
 
 /**
@@ -64,6 +73,7 @@ export function* annotationRootSaga(): Generator {
       strokeCommitted.type,
       undoRequested.type,
       redoRequested.type,
+      clearCanvasRequested.type,
       resetAnnotation.type,
     ])) as { type: string };
 
@@ -88,6 +98,15 @@ export function* annotationRootSaga(): Generator {
         const snapshot = future.pop()!;
         past.push(snapshot);
         yield call(restoreSnapshot, snapshot);
+      }
+
+    } else if (action.type === clearCanvasRequested.type) {
+      // ── Clear all: wipe canvas, snapshot the empty state ─────────────────
+      yield call(clearCanvas);
+      const snapshot = (yield call(captureSnapshot)) as string | null;
+      if (snapshot) {
+        past.push(snapshot);
+        future.length = 0;
       }
 
     } else if (action.type === resetAnnotation.type) {

@@ -1,9 +1,10 @@
 import { createAction, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // Saga trigger actions — watched by annotationRootSaga, carry no reducer logic.
-export const strokeCommitted = createAction('annotation/strokeCommitted');
-export const undoRequested   = createAction('annotation/undoRequested');
-export const redoRequested   = createAction('annotation/redoRequested');
+export const strokeCommitted      = createAction('annotation/strokeCommitted');
+export const undoRequested        = createAction('annotation/undoRequested');
+export const redoRequested        = createAction('annotation/redoRequested');
+export const clearCanvasRequested = createAction('annotation/clearCanvasRequested');
 import { AnnotationState, DrawingTool } from '../store/types';
 
 const initialState: AnnotationState = {

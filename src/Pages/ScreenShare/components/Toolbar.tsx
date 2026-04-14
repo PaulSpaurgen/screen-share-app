@@ -7,6 +7,7 @@ import {
   setStrokeWidth,
   undoRequested,
   redoRequested,
+  clearCanvasRequested,
 } from '../annotations/annotationSlice';
 import { DrawingTool } from '../store/types';
 import { captureScreenshot } from '../screen/screenshotUtils';
@@ -95,18 +96,25 @@ function ToolPicker() {
   const activeTool = useAppSelector((s) => s.annotation.activeTool);
 
   return (
-    <>
+    <select
+      value={activeTool}
+      onChange={(e) => dispatch(setActiveTool(e.target.value as DrawingTool))}
+      style={{
+        padding: '0.4rem 0.6rem',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        background: '#374151',
+        color: 'white',
+        border: '2px solid #4b5563',
+        fontWeight: 700,
+        fontSize: '0.8rem',
+        outline: 'none',
+      }}
+    >
       {DRAWING_TOOLS.map((t) => (
-        <button
-          key={t.id}
-          onClick={() => dispatch(setActiveTool(t.id))}
-          title={t.label}
-          style={btn(activeTool === t.id)}
-        >
-          {t.label}
-        </button>
+        <option key={t.id} value={t.id}>{t.label}</option>
       ))}
-    </>
+    </select>
   );
 }
 
@@ -177,6 +185,13 @@ function UndoRedoControls() {
         style={btn(false, !canRedo)}
       >
         ↪ Redo
+      </button>
+      <button
+        onClick={() => dispatch(clearCanvasRequested())}
+        title="Clear all drawings"
+        style={{ ...btn(false, false, true), fontSize: '0.75rem' }}
+      >
+        Clear All
       </button>
     </div>
   );
