@@ -1,8 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
 import createSagaMiddleware from 'redux-saga';
-import screenShareReducer from '../screen-share/screenShareSlice';
+import screenShareReducer from '../screen/screenShareSlice';
 import annotationReducer from '../annotations/annotationSlice';
-import { screenShareRootSaga } from '../screen-share/screenShareSaga';
+import { screenShareRootSaga } from '../screen/screenShareSaga';
+import { annotationRootSaga } from '../annotations/annotationSaga';
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -20,6 +21,7 @@ export const store = configureStore({
 });
 
 sagaMiddleware.run(screenShareRootSaga);
+sagaMiddleware.run(annotationRootSaga);
 
 export type AppDispatch = typeof store.dispatch;
 export type { RootState } from './types';

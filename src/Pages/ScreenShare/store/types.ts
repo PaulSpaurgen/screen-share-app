@@ -1,5 +1,5 @@
 export type ShareStatus = 'idle' | 'requesting' | 'active' | 'error';
-export type DrawingTool = 'pen' | 'highlighter' | 'eraser';
+export type DrawingTool = 'pen' | 'highlighter' | 'eraser' | 'rectangle' | 'arrow' | 'text';
 
 export interface ScreenShareState {
   status: ShareStatus;
@@ -11,6 +11,8 @@ export interface AnnotationState {
   activeTool: DrawingTool;
   strokeColor: string;
   strokeWidth: number;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 export interface RootState {

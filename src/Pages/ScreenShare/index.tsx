@@ -1,8 +1,8 @@
-import { lazy, Suspense, useRef, useState, useCallback, useLayoutEffect } from "react";
+import { lazy, Suspense, Activity, useRef, useState, useCallback, useLayoutEffect } from "react";
 import { Provider } from "react-redux";
 import { store } from "./store";
 import { useAppSelector } from "./store/hooks";
-import { useScreenCapture } from "./screen-share/hooks/useScreenCapture";
+import { useScreenCapture } from "./screen/hooks/useScreenCapture";
 import Toolbar from "./components/Toolbar";
 
 const CanvasOverlay = lazy(
@@ -91,11 +91,9 @@ function ScreenShareInner() {
             </div>
           )}
 
-          {isEnabled && isActive && (
-            <Suspense fallback={null}>
-              <CanvasOverlay />
-            </Suspense>
-          )}
+          <Activity mode={isEnabled && isActive ? "visible" : "hidden"}>
+            <CanvasOverlay />
+          </Activity>
         </div>
       </div>
 

@@ -9,6 +9,7 @@ import {
   reset,
 } from './screenShareSlice';
 import { resetAnnotation } from '../annotations/annotationSlice';
+import { canvasRegistry } from '../annotations/canvasRegistry';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -65,6 +66,12 @@ function* teardown(): Generator {
   mediaRegistry.stream = null;
   mediaRegistry.mediaRecorder = null;
   mediaRegistry.chunks = [];
+  mediaRegistry.videoEl = null;
+
+  // Dispose the Fabric canvas — this is the authoritative teardown point,
+  // not a React effect cleanup, so it is unaffected by <Activity> cycles.
+  canvasRegistry.canvas?.dispose();
+  canvasRegistry.canvas = null;
 
   yield put(reset());
   yield put(resetAnnotation());

@@ -29,8 +29,10 @@ export function useScreenCapture() {
         video.srcObject = stream;
         void video.play().catch(() => {});
       }
+      mediaRegistry.videoEl = video;
     } else {
       video.srcObject = null;
+      mediaRegistry.videoEl = null;
     }
   }, [status]);
 
