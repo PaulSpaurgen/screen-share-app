@@ -213,6 +213,18 @@ The entire feature is self-contained under `Pages/ScreenShare/` with its own Red
 
 ---
 
+## Keyboard Shortcuts
+
+All shortcuts are active while screen sharing is running.
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+D` | Toggle drawing mode on / off |
+| `Ctrl+Z` | Undo last stroke or shape |
+| `Ctrl+Y` | Redo |
+
+---
+
 ## Project Structure
 
 ```

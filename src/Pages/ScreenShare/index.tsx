@@ -1,8 +1,10 @@
-import { lazy, Suspense, Activity, useRef, useState, useCallback, useLayoutEffect } from "react";
+import { lazy, Suspense, Activity, useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import { Provider } from "react-redux";
 import { store } from "./store";
-import { useAppSelector } from "./store/hooks";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { useScreenCapture } from "./screen/hooks/useScreenCapture";
+import { toggleAnnotation } from "./annotations/annotationSlice";
+import { undoRequested, redoRequested } from "./annotations/annotationSlice";
 import Toolbar from "./components/Toolbar";
 
 const CanvasOverlay = lazy(
@@ -10,11 +12,37 @@ const CanvasOverlay = lazy(
 );
 
 function ScreenShareInner() {
+  const dispatch = useAppDispatch();
   const status = useAppSelector((s) => s.screenShare.status);
   const error = useAppSelector((s) => s.screenShare.error);
   const isEnabled = useAppSelector((s) => s.annotation.isEnabled);
 
   const { liveVideoRef, startCapture, stopCapture } = useScreenCapture();
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (status !== 'active') return;
+
+      // Ctrl+D — toggle drawing on/off
+      if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        dispatch(toggleAnnotation());
+        return;
+      }
+
+      // Ctrl+Z — undo  /  Ctrl+Y — redo  (only while drawing is enabled)
+      if (e.ctrlKey && e.key === 'z') {
+        e.preventDefault();
+        dispatch(undoRequested());
+      } else if (e.ctrlKey && e.key === 'y') {
+        e.preventDefault();
+        dispatch(redoRequested());
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [dispatch, status]);
 
   const videoWrapperRef = useRef<HTMLDivElement>(null);
   const videoAspectRef = useRef<number | null>(null);
