@@ -44,6 +44,10 @@ export function useFabricManager({
     const container = containerRef.current;
     if (!el || !container) return;
 
+    if (fabricRef.current && !isCanvasAlive(fabricRef.current)) {
+      fabricRef.current = null;
+    }
+
     if (!fabricRef.current) {
       const { clientWidth: width, clientHeight: height } = container;
 
